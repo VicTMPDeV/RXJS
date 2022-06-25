@@ -195,27 +195,3 @@ const observable7$ = interval(1000); //Emite cada segundo un evento
 // });
 
 // timer(15000).subscribe(() => subscription8.unsubscribe());
-
-
-
-
-
-
-
-SACAR LO SIGUIENTE A OTRO REPO
-
-
-
-
-
-
-
-
-// ####################################################################################################################
-// Función fromEvent() de RxJS
-// --------------------------------------------------------------------------------------------------------------------
-// Asocia un Observable a un Event Target concreto para emitir los eventos generados por este.
-// Se pueden canalizar Eventos de un elemento del DOM (o Event Emitters en NODE por ejemplo también).
-// ####################################################################################################################
-
-
