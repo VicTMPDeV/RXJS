@@ -84,7 +84,5 @@ export default () => {
     );
     const subscription = click$.subscribe(evt => displayLog(evt));
     // RESULTADO : Vemos como me loga un evento por cada tap en la consola.
-
-
-
+    
 }
