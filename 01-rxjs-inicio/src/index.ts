@@ -17,11 +17,13 @@
 // 2.- OBSERVER/SUBSCRIBER
 //---------------------------------------------------------------------------------------------------------------------
 // ####################################################################################################################
-// NOTA: EN UN SISTEMA PULL, EL OBSERVER(Consumidor) PEDIRÍA LOS DATOS AL OBSERVABLE(Productor) Y ÉSTE SE LOS DEVUELVE.
-//       EN UN SISTEMA PUSH, EL OBSERVER(Consumidor) LE DICE AL OBSERVABLE(Productor) QUE ESTÁ INTERESADO EN SU 
-//       CONTENIDO, ENTONCES SE SUSCRIBE A ÉL, Y ES EL PRODUCTOR EL QUE ENVÍA DATOS, CUANDO LOS TENGA, AL CONSUMIDOR.
-//       LOS OBSERVABLES DE RXJS HACEN PUSH, EMPUJAN, DEL STREAM DE DATOS HACIA SU OBSERVER LLAMANDO AL NEXT() 
-//       DE SU OBSERVER
+// NOTA 1: UN OBSERVER Y UN SUBSCRIBER SON LO MISMO, SOLO QUE CUANDO SE PASA COMO PARÁMETRO AL OBSERVABLE SE LE LLAMA
+//         SUBSCRIBER, Y CUANDO SE PASA COMO PARÁMETRO AL SUBSCRIBE() , SE CONOCE COMO OBSERVER.
+// NOTA 2: EN UN SISTEMA PULL, EL OBSERVER(Consumidor) PEDIRÍA LOS DATOS AL OBSERVABLE(Productor) Y ÉSTE SE LOS DEVUELVE.
+//         EN UN SISTEMA PUSH, EL OBSERVER(Consumidor) LE DICE AL OBSERVABLE(Productor) QUE ESTÁ INTERESADO EN SU 
+//         CONTENIDO, ENTONCES SE SUSCRIBE A ÉL, Y ES EL PRODUCTOR EL QUE ENVÍA DATOS, CUANDO LOS TENGA, AL CONSUMIDOR.
+//         LOS OBSERVABLES DE RXJS HACEN PUSH, EMPUJAN, DEL STREAM DE DATOS HACIA SU OBSERVER LLAMANDO AL NEXT() 
+//         DE SU OBSERVER
 // ####################################################################################################################
 // Un OBSERVER (Event Listener) se encarga de escuchar y actuar sobre lo que emite un OBSERVABLE.
 // Los Observers son las funciones CALLBACK (van dentro de los parámetros de subscribe()) que ESCUCHAN EL FLUJO DE 
@@ -46,7 +48,7 @@
 // 3.- SUBSCRIPTION
 //---------------------------------------------------------------------------------------------------------------------
 // Una Subscripción representa la EJECUCIÓN DE 1 ÚNICO OBSERVABLE. Se invoca mediante el método subscribe().
-// Una Subscription es notificada de las emisiones del subscriber del Observable mediante el Observer.
+// Una Subscription es notificada de las emisiones del Subscriber del Observable mediante el Observer.
 // También sirve para CANCELAR LA EJECUCIÓN del mismo en un momento dado con el método unsubscribe().
 //---------------------------------------------------------------------------------------------------------------------
 // 4.- OPERATORS
@@ -122,46 +124,22 @@ import { Observable, Observer, Subscription } from 'rxjs';
 // 3.- Pasar un Objeto OBSERVER por parámetro
 // --------------------------------------------------------------------------------------------------------------------------
 // HASTA AHORA HEMOS ESTADO PASANDO UNA VERSIÓN REDUCIDA DEL OBJETO OBSERVER, EN REALIDAD EL OBJETO OBSERVER ES ASÍ:
-// 3.1.- Pasando objeto Observer por referencia al Observable.
 // --------------------------------------------------------------------------------------------------------------------------
-// const observer: Observer<string> = {
-//     next: value => console.log('next: ', value),
-//     error: error => console.warn('error: ', error),
-//     complete: () => console.info('Completado') 
-// }
-// Mando el objeto Observer a la Suscripción del Observable.
-// obs$.subscribe(observer);
-
-// 3.2.- Declarado directamente en argumentos
-// ------------------------------------------
-// obs$.subscribe({ 
-//     next: value => console.log('next: ', value),
-//     error: error => console.warn('error: ', error),
-//     complete: () => console.info('Completado') 
-// });
-
-// ##########################################################################################################################
-// SI CREO VARIAS SUBSCRIPCIONES, CADA SUSCRIPCIÓN GENERA UNA NUEVA EJECUCIÓN DEL FLUJO DE DATOS DEL OBSERVER DESDE EL INICIO 
-// LO CUAL SE CONOCE COMO COLD OBSERVABLES (que es el comportamiento por defecto de cualquier OBSERVABLE)
-// ##########################################################################################################################
-//--------------------------------------------------------------------------------------------------------------------
-// EJEMPLO SÍNCRONO. CONSTRUCTOR DEL OBSERVABLE, PASANDOLE POR PARAMETROS UN OBSERVER
-//--------------------------------------------------------------------------------------------------------------------
-// const obs$ = new Observable<string>(observer => {
+// const obs$ = new Observable<string>(subscriber => {
 //     //SUBSCRIBERS/OBSERVERS -> entidades que van a estar pendientes de las EMISIONES de mi OBSERVABLE/PUBLISHER
-//     observer.next('Hola');  //Next EMITE el valor del Observable hacia a los Subscribers.
-//     observer.next('Mundo'); //Segunda Emisión
-//     observer.next('Hola');  //Tercera Emisión
-//     observer.next('Mundo'); //Cuarta Emisión
+//     subscriber.next('Hola');  //Next EMITE el valor del Observable hacia a los Subscribers.
+//     subscriber.next('Mundo'); //Segunda Emisión
+//     subscriber.next('Hola');  //Tercera Emisión
+//     subscriber.next('Mundo'); //Cuarta Emisión
 
 //     //Error forzado - solo para probar que se ejecuta el error, dejar comentado
 //     // const a = undefined;
 //     // a.nombre = 'Víctor';
 
-//     observer.complete(); //Metodo del OBSERVER que indica que EL STREAM DE DATOS EMITIDO POR EL OBSERVABLE HA TERMINADO (FINALIZA LA SUSCRIPCIÓN DESDE EL PROPIO FLUJO DE EVENTOS (OBSERVABLE)) 
+//     subscriber.complete(); //Metodo del OBSERVER que indica que EL STREAM DE DATOS EMITIDO POR EL OBSERVABLE HA TERMINADO (FINALIZA LA SUSCRIPCIÓN DESDE EL PROPIO FLUJO DE EVENTOS (OBSERVABLE)) 
 
-//     observer.next('Hola');  //Quinta Emisión -> NO SE NOTIFICA
-//     observer.next('Mundo'); //Sexta Emisión -> NO SE NOTIFICA
+//     subscriber.next('Hola');  //Quinta Emisión -> NO SE NOTIFICA
+//     subscriber.next('Mundo'); //Sexta Emisión -> NO SE NOTIFICA
 // });
 
 // const observer: Observer<string> = {
@@ -169,9 +147,9 @@ import { Observable, Observer, Subscription } from 'rxjs';
 //     error: error => console.warn('error: ', error),
 //     complete: () => console.info('Completado') 
 // }
-// CADA SUSCRIPCIÓN GENERA UNA NUEVA EJECUCIÓN DEL FLUJO DE DATOS DEL OBSERVER DESDE EL INICIO 
+
 // const subscription1 = obs$.subscribe(observer);
-// const subscription2 = obs$.subscribe(observer);
+
 
 // ###########################################################################################################
 // FINALIZAR UN OBSERVABLE
@@ -222,16 +200,16 @@ import { Observable, Observer, Subscription } from 'rxjs';
 // EJERCICIO 2 -> LA COLA DE LA CARNICERÍA
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-const marcadorTurno$: Observable<number> = Observable<number>.create( (subscriberTicket) => { //Recibe una función Callback
+const marcadorTurno$: Observable<number> = Observable<number>.create( (ticketSubscriber) => { //Recibe una función Callback
     //AQUÍ DENTRO ESTÁN LOS EVENTOS QUE EMITE EL OBSERVABLE HACIA EL OBSERVER
     let numero: number = 0;
     const turnos = setInterval(() => {
         numero++;
-        subscriberTicket.next(numero);
+        ticketSubscriber.next(numero);
     }, 2000);
 
     setTimeout(() => {
-        subscriberTicket.complete(); //Metodo del OBSERVER que indica que EL STREAM DE DATOS EMITIDO POR EL OBSERVABLE 
+        ticketSubscriber.complete(); //Metodo del OBSERVER que indica que EL STREAM DE DATOS EMITIDO POR EL OBSERVABLE 
                                      //HA TERMINADO (FINALIZA LA SUSCRIPCIÓN DESDE EL PROPIO FLUJO DE EVENTOS (OBSERVABLE))
         console.log('NO QUEDAN MÁS TICKETS EN EL RULO');
     }, 30000);
