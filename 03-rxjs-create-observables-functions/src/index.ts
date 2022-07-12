@@ -1,4 +1,4 @@
-import { Observer, Subscription, from, of, range, interval, timer } from "rxjs";
+import { Observer, Subscription, from, of, range, interval, timer, Observable, fromEvent, asyncScheduler } from 'rxjs';
 
 
 // ####################################################################################################################
@@ -59,9 +59,37 @@ import { Observer, Subscription, from, of, range, interval, timer } from "rxjs";
 // RESULTADO
 // ---------
 // En este caso se emite UN ÚNICO EVENTO CUANDO SE RESUELVE LA PROMISE (a los 2 segundos).
-// porque la naturaleza del observable es string, que es un array de caracteres.
 
 
+// ####################################################################################################################
+// Función fromEvent() de RxJS
+// --------------------------------------------------------------------------------------------------------------------
+// Asocia un Observable a un Event Target concreto para emitir los eventos generados por este.
+// Se pueden canalizar Eventos de un elemento del DOM (o Event Emitters en NODE por ejemplo también).
+// ####################################################################################################################
+
+//---------------------------------------------------------------------------------------------------------------------
+// Ejemplo 4
+//---------------------------------------------------------------------------------------------------------------------
+const observable4$: Observable<PointerEvent> = fromEvent<PointerEvent>(document, 'click');
+const observable5$: Observable<KeyboardEvent> = fromEvent<KeyboardEvent>(document, 'keyup');
+
+// // 1.- Creo la siguiente construcción para averiguar el tipado del evento.
+// const observer = {
+//     next: next => console.log('NEXT: ', next),
+//     error: null,
+//     complete: () => console.log('SECUENCIA COMPLETADA')
+// } 
+// const subscription4 = observable4$.subscribe(observer);
+// const subscription5 = observable5$.subscribe(observer);
+
+// // 2.- Ahora ya puedo trabajar con las propiedades del EVENTO CONCRETO y no con las del EVENT genérico.
+// const subscription6: Subscription = observable4$.subscribe( ({x,y}) => {
+//     console.log(`X: ${x}`,`Y: ${y}`);
+// });
+// const subscription7: Subscription = observable5$.subscribe( (evento) => {
+//     console.log(`TECLA PULSADA: ${evento.key}`);
+// });
 
 
 
@@ -69,25 +97,34 @@ import { Observer, Subscription, from, of, range, interval, timer } from "rxjs";
 // Funcion of() de RxJS
 // --------------------------------------------------------------------------------------------------------------------
 // of() -> Crea un Observable que emite una secuencia variable de Objetos, incluso de distinto tipo.
+//         Emite los valores de manera SÍNCRONA y cuando termina de emitirlos, se Completa()
 // ####################################################################################################################
 
 //---------------------------------------------------------------------------------------------------------------------
-// Ejemplo 1 - Básico
+// Ejemplo 5 - Básico
 //---------------------------------------------------------------------------------------------------------------------
 
-// 1.- Importamos of de rxjs
-// 2.- Creamos el Observable
-// const observable4$ = of(1, 2, 3, 4, 5, 6);
-// 3.- Creamos una Subscription para que se ejecute el Observable (simplificado, solo next).
-// const subscription4 = observable4$.subscribe(data => console.log(data));
+// // 1.- Importamos of de rxjs
+// // 2.- Creamos el Observable
+// const observable6$: Observable<number> = of(1, 2, 3, 4, 5, 6);
+// const observable7$: Observable<number> = of(...[1,2,3,4,5,6],7,8,9);
+// // 3.- Creamos un Observer
+// const observer: Observer<number> = {
+//     next: next => console.log('NEXT: ', next),
+//     error: null,
+//     complete: () => console.log('SECUENCIA COMPLETADA')
+// } 
+// // 4.- Creamos una Subscription para que se ejecute el Observable.
+// const subscription8 = observable6$.subscribe(observer);
+// const subscription9 = observable7$.subscribe(observer);
 
 //---------------------------------------------------------------------------------------------------------------------
-// Ejemplo 2 - Complejo
+// Ejemplo 6 - Complejo
 //---------------------------------------------------------------------------------------------------------------------
 
-// 1.- Importamos of de rxjs
-// 2.- Creamos el Observable
-// const observable5$ = of(
+// //1.- Importamos of de rxjs
+// //2.- Creamos el Observable
+// const observable8$ = of(
 //     [1, 2, 3, 4, 5, 6],
 //     "Hello World",
 //     {
@@ -101,12 +138,14 @@ import { Observer, Subscription, from, of, range, interval, timer } from "rxjs";
 //         return "Soy una Arrow Function";
 //     }
 // );
-// 3.- Creamos una Subscription para que se ejecute el Observable (simplificado, solo next).
-// const subscription5 = observable5$.subscribe(console.log);
+// //3.- Creamos una Subscription para que se ejecute el Observable (simplificado, solo next).
+// const subscription10 = observable8$.subscribe(console.log);
+
 // ---------
 // RESULTADO
 // ---------
 // En este caso se han emitido 5 eventos, uno por cada elemento dentro del of()
+
 
 
 
@@ -119,17 +158,24 @@ import { Observer, Subscription, from, of, range, interval, timer } from "rxjs";
 // ####################################################################################################################
 
 //------------------------------
-// Ejemplo
+// Ejemplo 7
 //------------------------------
-// 1.- Importamos range de rxjs
-// 2.- Creamos el Observable
-// const observable6$ = range(3,10); //Rango de números que empieza en el 3 y tiene 10 números
-// 3.- Creamos una Subscription para que se ejecute el Observable (simplificado, solo next).
-// const subscription6 = observable6$.subscribe(console.log);
-// ---------
-// RESULTADO
-// ---------
-// Se crea una secuencia ordenada desde 3 hasta 12
+//1.- Importamos range de rxjs
+//2.- Creamos el Observable
+console.log('INICIO');
+// const observable9$ = range(3,100); //Rango de números que empieza en el 3 y tiene 100 EMISIONES
+// const observable10$ = range(100); //Rango de números que empieza en el 3 y tiene 100 EMISIONES
+const observable10Async$ = range(1, 20, asyncScheduler);
+//3.- Creamos una Subscription para que se ejecute el Observable (simplificado, solo next).
+// const subscription11 = observable9$.subscribe(console.log);
+// const subscription12 = observable10$.subscribe(console.log);//HACE 100 EMISIONES EMPEZANDO EN 0
+const subscription12Async = observable10Async$.subscribe(console.log);
+console.log('FIN');
+//---------
+//RESULTADO
+//---------
+//Se crea una secuencia ordenada Y SINCRONA desde 3 hasta 100
+//Si le añado el asyncScheduler la secuencia será ASÍNCRONA (vemos que primero imprime INICIO Y FIN, y luego la EMISIÓN).
 
 
 
@@ -144,14 +190,14 @@ import { Observer, Subscription, from, of, range, interval, timer } from "rxjs";
 // ####################################################################################################################
 
 //------------------------------
-// Ejemplo 1
+// Ejemplo 8
 //------------------------------
 // 1.- Importamos interval de rxjs
 
 // 2.- Creamos el Observable
-console.time('EXECUTION TIME');
-console.log('Comienza el contador... 0')
-const observable7$ = interval(1000); //Emite cada segundo un evento
+// console.time('EXECUTION TIME');
+// console.log('Comienza el contador... 0')
+// const observable7$ = interval(1000); //Emite cada segundo un evento
 // EQUIVALENTE JS
 // --------------
 // setInterval(() => {
@@ -187,7 +233,7 @@ const observable7$ = interval(1000); //Emite cada segundo un evento
 // ####################################################################################################################
 
 //------------------------------
-// Ejemplo 2
+// Ejemplo 9
 //------------------------------
 // const observable8$ = timer(5000, 1000); // Comienza 5 segundos de retardo, y luego emite eventos cada segundo
 // const subscription8 = observable8$.subscribe( function(data){
